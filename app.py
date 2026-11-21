@@ -11,8 +11,11 @@ import traceback
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+import threading
+
 import converters
 import core
+import titledb
 
 CONSOLES = ["PS4 (jailbroken, Apollo)", "PS5 playing the PS4 version", "PS5 (PS5 version)"]
 REGIONS = ["US", "EU", "JP", "Asia", "Any"]
@@ -67,9 +70,10 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("PS Save Converter - PC to PS4/PS5")
-        self.geometry("900x640")
-        self.minsize(760, 520)
+        self.geometry("980x780")
+        self.minsize(800, 640)
         self.db = core.load_db()
+        self.tdb = titledb.TitleDB()
         self.convs = converters.available()
         self.usb_found: list[core.SaveFolder] = []
         self.recommended: str | None = None
@@ -110,10 +114,42 @@ class App(tk.Tk):
     def _build_game_tab(self, nb):
         f = ttk.Frame(nb, padding=10)
         nb.add(f, text="1. Game")
+
+        # ---- search the built-in list of every PS4 game
+        s = ttk.LabelFrame(f, text="", padding=6)
+        s.pack(side="top", fill="x", pady=(0, 8))
+        self.search_frame = s
+        row = ttk.Frame(s)
+        row.pack(fill="x")
+        self.search_var = tk.StringVar()
+        e = ttk.Entry(row, textvariable=self.search_var, width=40)
+        e.pack(side="left")
+        e.bind("<Return>", lambda ev: self._search())
+        ttk.Button(row, text="Search", command=self._search).pack(side="left", padx=4)
+        self.demos_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(row, text="Show demos/betas", variable=self.demos_var,
+                        command=self._search).pack(side="left", padx=6)
+        self.update_btn = ttk.Button(row, text="Update list from internet", command=self._update_titles)
+        self.update_btn.pack(side="right")
+
+        cols = ("id", "name", "region")
+        self.results = ttk.Treeview(s, columns=cols, show="headings", height=6, selectmode="extended")
+        for c, w, label in (("id", 100, "Title ID"), ("name", 420, "Name"), ("region", 70, "Region")):
+            self.results.heading(c, text=label)
+            self.results.column(c, width=w, stretch=(c == "name"))
+        self.results.pack(fill="x", pady=4)
+        self.results.bind("<Double-1>", lambda ev: self._select_all_regions())
+        row2 = ttk.Frame(s)
+        row2.pack(fill="x")
+        ttk.Button(row2, text="Add selected to my games", command=self._add_from_search).pack(side="left")
+        ttk.Label(row2, text="Tip: double-click a game to select it in every region (US/EU/JP/Asia).",
+                  foreground="#666").pack(side="left", padx=8)
+        self._update_search_title()
+
         left = ttk.Frame(f)
         left.pack(side="left", fill="y")
         ttk.Label(left, text="Games").pack(anchor="w")
-        self.game_list = tk.Listbox(left, width=32, height=18, exportselection=False)
+        self.game_list = tk.Listbox(left, width=32, height=10, exportselection=False)
         self.game_list.pack(fill="y", expand=True)
         self.game_list.bind("<<ListboxSelect>>", lambda e: self._show_game())
         btns = ttk.Frame(left)
@@ -171,7 +207,82 @@ class App(tk.Tk):
             self._refresh_targets()
 
     def _check_tid(self):
-        self.tid_result.config(text=core.describe_title_id(self.tid_entry.get()))
+        text = core.describe_title_id(self.tid_entry.get())
+        tid = core.normalize_title_id(self.tid_entry.get())
+        r = self.tdb.lookup(tid) if tid else None
+        if r:
+            text += f"\nGame: {r[1]}  (region {r[2]})"
+        elif tid:
+            text += "\n(not in the built-in game list)"
+        self.tid_result.config(text=text)
+
+    # ---- built-in title list
+    def _update_search_title(self):
+        self.search_frame.config(text=f"Find any PS4 game ({len(self.tdb):,} titles, every region). "
+                                      "Type a name or a title ID")
+
+    def _search(self):
+        self.results.delete(*self.results.get_children())
+        for tid, name, region in self.tdb.search(self.search_var.get(), include_demos=self.demos_var.get()):
+            self.results.insert("", "end", iid=tid, values=(tid, name, region))
+
+    def _select_all_regions(self):
+        sel = self.results.selection()
+        if not sel:
+            return
+        name = self.results.item(sel[0], "values")[1]
+        same = {r[0] for r in self.tdb.same_game(name)} | set(sel)
+        for tid, n, reg in self.tdb.same_game(name):
+            if not self.results.exists(tid):
+                self.results.insert("", "end", iid=tid, values=(tid, n, reg))
+        self.results.selection_set([i for i in same if self.results.exists(i)])
+
+    def _add_from_search(self):
+        sel = self.results.selection()
+        if not sel:
+            return messagebox.showinfo("Add game", "Select one or more rows first (double-click selects "
+                                       "every region of a game).")
+        rows = [self.results.item(i, "values") for i in sel]
+        # Use an English name if there is one (JP releases have Japanese names).
+        names = [r[1] for r in rows]
+        name = next((n for n in names if n.isascii()), names[0]).replace("™", "").replace("®", "").strip()
+        versions = [{"title_id": tid, "platform": core.platform_of(tid), "region": reg,
+                     "edition": "", "verified": True} for tid, _, reg in rows]
+        game = core.find_game(self.db, name)
+        if game:
+            have = {v["title_id"] for v in game.get("versions", [])}
+            added = [v for v in versions if v["title_id"] not in have]
+            for v in game["versions"]:     # IDs confirmed by the list
+                if v["title_id"] in {x["title_id"] for x in versions}:
+                    v["verified"] = True
+            game["versions"].extend(added)
+            msg = f"{name} is already in your games. Added {len(added)} new version(s)."
+        else:
+            game = {"name": name, "aliases": [], "pc_save_hint": "", "converter": "generic",
+                    "file_map": {}, "notes": "Added from the built-in game list.", "versions": versions}
+            self.db["games"].append(game)
+            msg = f"Added {name} with {len(versions)} version(s)."
+        core.save_db(self.db)
+        self._refresh_games(select=self.db["games"].index(game))
+        messagebox.showinfo("Add game", msg)
+
+    def _update_titles(self):
+        self.update_btn.config(state="disabled", text="Downloading...")
+
+        def work():
+            try:
+                n = self.tdb.update_from_internet()
+                msg = f"Game list updated: {n:,} titles."
+            except Exception as e:
+                msg = f"Couldn't update the game list: {e}"
+            self.after(0, lambda: done(msg))
+
+        def done(msg):
+            self.update_btn.config(state="normal", text="Update list from internet")
+            self._update_search_title()
+            messagebox.showinfo("Game list", msg)
+
+        threading.Thread(target=work, daemon=True).start()
 
     def _delete_game(self):
         g = self.game
@@ -249,7 +360,10 @@ class App(tk.Tk):
             out += ["", "Matching versions in database:"]
             out += [f"  {v['title_id']}  {v.get('region', '?')}  {v.get('edition', '')}" for v in rec.candidates]
         if self.usb_found:
-            out += ["", "Found on USB:"] + [f"  {s.label()}" for s in self.usb_found]
+            out += ["", "Found on USB:"]
+            for s in self.usb_found:
+                r = self.tdb.lookup(s.title_id)
+                out.append(f"  {s.label()}" + (f"   = {r[1]} ({r[2]})" if r else ""))
         self._set_text(self.rec_box, "\n".join(out))
 
     # ------------------------------------------------------------- tab 3

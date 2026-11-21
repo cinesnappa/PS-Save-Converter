@@ -9,6 +9,10 @@ PlayStation version (title ID) for the save and puts the files where Apollo expe
 
 ## Features
 
+- **Built-in list of every PS4 game:** 39,000+ titles with title ID and region
+  (US / EU / JP / Asia). Search by name (`kakarot`, `gta 5`, `rdr2`) or by ID, double-click a
+  game to select every region, and add it in one click. **Update list from internet**
+  downloads the latest version.
 - **Title ID helper:** understands IDs like `CUSA14835` / `PPSA01234`, cleans up typos
   (`cusa-4947` → `CUSA04947`), and reads the region from content IDs (`UP…` US, `EP…` EU, `JP…`, `HP…`).
 - **Version picker:** tells you which version to target (PS4 vs PS5, region,
@@ -31,7 +35,15 @@ PlayStation version (title ID) for the save and puts the files where Apollo expe
 | Any game whose PC and PS4 save data is the same | `generic` | Copy + rename (set a rename map per game). |
 | GTA V, RDR2 | `generic` | Experimental: title IDs not verified, needs a real converter. |
 
-You can add games from the app (**Game** tab → **Add game**) or by editing `games.json`.
+Any other PS4 game can be added from the app: **Game** tab → search → **Add selected to my games**.
+It starts with the `generic` converter. Manual entries: **Add game**, or edit `games.json`.
+
+## Credits
+
+The PS4 game list (`data/ps4_titles.json`) is built from
+[andshrew/supreme-enigma](https://github.com/andshrew/supreme-enigma) (MIT licence),
+an extract of Sony's PS5 backwards-compatibility API. Rebuild it with
+`python titledb.py PS5-BC-Status.json`, or use the in-app update button.
 
 ## Requirements
 
