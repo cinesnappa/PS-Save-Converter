@@ -1,0 +1,41 @@
+{
+  "_readme": "Game database. Title IDs marked verified:false are from memory/community lists - ALWAYS confirm with 'Scan USB' (the ID your own console uses wins). Add games from the app (Game tab > Add game) or edit this file.",
+  "games": [
+    {
+      "name": "Dragon Ball Z: Kakarot",
+      "aliases": ["KAKAROT", "DBZ Kakarot", "DBZK", "DBZKK"],
+      "pc_save_hint": "ManualSave0, ManualSave1, ... (one file per slot, 4,529,808 bytes each)",
+      "converter": "kakarot",
+      "file_map": {},
+      "notes": "The game encrypts its own saves (AES, 16-byte blocks). The converter doesn't decrypt them. It checks the files, then compares them with your PS4 export to see if both use the same key. Same key = drop-in compatible. Each slot (ManualSave0, ManualSave1...) is its own save on the PS4, so convert one slot at a time into its matching Apollo export folder.",
+      "versions": [
+        {"title_id": "CUSA14835", "platform": "PS4", "region": "EU", "edition": "Disc/Digital", "verified": true},
+        {"title_id": "CUSA14655", "platform": "PS4", "region": "US", "edition": "Disc/Digital", "verified": false}
+      ]
+    },
+    {
+      "name": "Grand Theft Auto V",
+      "aliases": ["GTA V", "GTA 5", "GTAV"],
+      "pc_save_hint": "Documents\\Rockstar Games\\GTA V\\Profiles\\<ID>\\SGTA5xxxx",
+      "converter": "generic",
+      "file_map": {},
+      "notes": "EXPERIMENTAL: GTA V PC and PS4 saves are not byte-identical. The generic converter only copies/renames - a game-specific converter plugin is needed for a working save.",
+      "versions": [
+        {"title_id": "CUSA00419", "platform": "PS4", "region": "US", "edition": "Disc/Digital", "verified": false},
+        {"title_id": "CUSA00411", "platform": "PS4", "region": "EU", "edition": "Disc/Digital", "verified": false}
+      ]
+    },
+    {
+      "name": "Red Dead Redemption 2",
+      "aliases": ["RDR2", "RDR 2"],
+      "pc_save_hint": "Documents\\Rockstar Games\\Red Dead Redemption 2\\Profiles\\<ID>\\SRDR3xxxx",
+      "converter": "generic",
+      "file_map": {},
+      "notes": "EXPERIMENTAL: needs a game-specific converter plugin for a working save.",
+      "versions": [
+        {"title_id": "CUSA03041", "platform": "PS4", "region": "US", "edition": "Disc/Digital", "verified": false},
+        {"title_id": "CUSA08519", "platform": "PS4", "region": "EU", "edition": "Disc/Digital", "verified": false}
+      ]
+    }
+  ]
+}
