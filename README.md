@@ -7,6 +7,12 @@ PlayStation version (title ID) for the save and puts the files where Apollo expe
 > This app does **not** do any PlayStation encryption or signing. Apollo does that
 > on the console. This app gets the files ready and checks them.
 
+## ▶️ Watch the 1-minute demo
+
+[![PS Save Converter demo video](https://img.youtube.com/vi/LwFTxNU493w/maxresdefault.jpg)](https://youtu.be/LwFTxNU493w)
+
+**[Watch on YouTube](https://youtu.be/LwFTxNU493w)**: moving a Dragon Ball Z: Kakarot save from PC to PS4, start to finish.
+
 ## Features
 
 - **Built-in list of every PS4 game:** 39,000+ titles with title ID and region
