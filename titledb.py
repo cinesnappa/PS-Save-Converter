@@ -15,7 +15,10 @@ import urllib.request
 from pathlib import Path
 
 SOURCE_URL = "https://raw.githubusercontent.com/andshrew/supreme-enigma/master/docs/PS5-BC-Status.json"
-DATA_PATH = Path(__file__).resolve().parent / "data" / "ps4_titles.json"
+import paths
+
+# Copied to %APPDATA% on first run of the .exe so "Update list" can overwrite it.
+DATA_PATH = paths.user_file("data/ps4_titles.json")
 
 # Sony store region prefixes -> the names the app uses.
 REGION_NAMES = {"UP": "US", "EP": "EU", "JP": "JP", "HP": "Asia", "KP": "Asia", "IP": "Internal"}

@@ -45,18 +45,33 @@ The PS4 game list (`data/ps4_titles.json`) is built from
 an extract of Sony's PS5 backwards-compatibility API. Rebuild it with
 `python titledb.py PS5-BC-Status.json`, or use the in-app update button.
 
-## Requirements
-
-- Windows 10/11
-- [Python 3.9+](https://www.python.org/downloads/) (tick **"tcl/tk"** and **"Add to PATH"** when installing)
-- A jailbroken PS4 with Apollo Save Tool and a USB stick (exFAT)
-
-No other packages needed.
-
 ## Download & run
 
-1. Click **Code → Download ZIP** on this page and unzip it.
-2. Double-click **`run.bat`** (or run `python app.py`).
+**Easiest: the .exe (no Python needed)**
+
+1. Go to **Releases** on the right of this page and download `PSSaveConverter.exe` from the latest version.
+2. Double-click it. Windows may show "Windows protected your PC" because the exe isn't
+   code-signed: click **More info → Run anyway**.
+
+Your games list and the updated title list are saved in `%APPDATA%\PSSaveConverter`,
+so they are kept when you download a newer version.
+
+**From source (Python 3.9+)**
+
+1. Install [Python](https://www.python.org/downloads/) (tick **"tcl/tk"** and **"Add to PATH"**).
+2. Click **Code → Download ZIP**, unzip it, and double-click **`run.bat`** (or run `python app.py`).
+
+You also need a jailbroken PS4 with Apollo Save Tool and a USB stick (exFAT).
+
+### Building the exe yourself
+
+```
+python -m pip install pyinstaller
+build_exe.bat
+```
+
+The exe appears in `dist\`. Each release's exe is built from the source code of that
+release, so you can check the code or build it yourself instead of trusting a download.
 
 ## How to use (example: DBZ Kakarot)
 

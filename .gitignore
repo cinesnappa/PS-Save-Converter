@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.tmp
+_backup_*/
+# never publish real save files
+*.sav
+ManualSave*
+SystemSave*
+AutoSave*
+# build output (attach the exe to a GitHub Release instead)
+build/
+dist/
+*.spec

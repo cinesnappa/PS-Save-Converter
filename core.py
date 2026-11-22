@@ -13,8 +13,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-APP_DIR = Path(__file__).resolve().parent
-DB_PATH = APP_DIR / "games.json"
+import paths
+
+APP_DIR = paths.USER_DIR
+DB_PATH = paths.user_file("games.json")
 
 # ---------------------------------------------------------------- title IDs
 
